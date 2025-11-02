@@ -34,6 +34,8 @@ class Filters extends BaseFilters
         'forcehttps'    => ForceHTTPS::class,
         'pagecache'     => PageCache::class,
         'performance'   => PerformanceMetrics::class,
+        'auth'          => \App\Filters\AuthFilter::class, // Tambahkan alias untuk AuthFilter
+        'role'          => \App\Filters\RoleFilter::class, // Tambahkan alias untuk RoleFilter
     ];
 
     /**
@@ -106,5 +108,28 @@ class Filters extends BaseFilters
      *
      * @var array<string, array<string, list<string>>>
      */
-    public array $filters = [];
+    public array $filters = [
+        // Filter untuk halaman yang memerlukan login
+        'auth' => [
+            'before' => [
+                'dashboard',
+                'dashboard/*',
+                'admin/*',
+                'manajer/*',
+                'kasir/*'
+            ]
+        ],
+        // Filter untuk halaman admin (hanya Admin Pusat)
+        'role:AD' => [
+            'before' => ['admin/*']
+        ],
+        // Filter untuk halaman manajer (Admin Pusat dan Manajer Outlet)
+        'role:MG' => [
+            'before' => ['manajer/*']
+        ],
+        // Filter untuk halaman kasir (semua role bisa akses)
+        'role:KS' => [
+            'before' => ['kasir/*']
+        ]
+    ];
 }

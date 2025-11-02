@@ -6,26 +6,51 @@ use CodeIgniter\Model;
 
 class UserModel extends Model
 {
-    protected $table      = 'users';
+    protected $table = 'users';
     protected $primaryKey = 'id';
-
-    // Kolom yang diizinkan untuk diisi
+    protected $useAutoIncrement = true;
+    protected $returnType = 'array';
+    protected $useSoftDeletes = false;
+    protected $protectFields = true;
     protected $allowedFields = ['role_id', 'nama', 'email', 'password', 'outlet_id', 'is_active'];
 
-    // Aturan yang sangat penting: Hashing password sebelum disimpan
+    // Dates
+    protected $useTimestamps = true;
+    protected $dateFormat = 'datetime';
+    protected $createdField = 'created_at';
+    protected $updatedField = 'updated_at';
+
+    // Callbacks untuk hashing password
+    protected $allowCallbacks = true;
     protected $beforeInsert = ['hashPassword'];
     protected $beforeUpdate = ['hashPassword'];
 
     // Fungsi untuk hashing password
     protected function hashPassword(array $data)
     {
-        if (! isset($data['data']['password'])) {
+        if (!isset($data['data']['password'])) {
             return $data;
         }
 
         $data['data']['password'] = password_hash($data['data']['password'], PASSWORD_DEFAULT);
-
         return $data;
+    }
+
+    // Helper function untuk mendapatkan user dengan role info
+    public function getUserWithRole($email)
+    {
+        return $this->select('users.*, roles.KdRole as kd_role, roles.nama_role')
+            ->join('roles', 'roles.id = users.role_id', 'left')
+            ->where('users.email', $email)
+            ->first();
+    }
+
+    // Helper function untuk mendapatkan semua users dengan role info
+    public function getAllUsersWithRole()
+    {
+        return $this->select('users.*, roles.KdRole as kd_role, roles.nama_role')
+            ->join('roles', 'roles.id = users.role_id', 'left')
+            ->findAll();
     }
     // protected $table            = 'users';
     // protected $primaryKey       = 'id';
