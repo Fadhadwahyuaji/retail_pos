@@ -30,7 +30,7 @@ class PromoModel extends Model
 
     // Validation
     protected $validationRules = [
-        'NoTrans'   => 'required|max_length[11]|is_unique[discountheader.NoTrans,NoTrans,{NoTrans}]',
+        'NoTrans'   => 'required|max_length[11]|is_unique[discountheader.NoTrans]',
         'Ketentuan' => 'required|max_length[25]',
         'TglAwal'   => 'required|valid_date',
         'TglAkhir'  => 'required|valid_date',
@@ -59,6 +59,19 @@ class PromoModel extends Model
     protected $cleanValidationRules = true;
 
     // Custom Methods
+
+    // Custom method to get validation rules with dynamic unique rule
+    public function getValidationRules(array $options = []): array
+    {
+        $rules = $this->validationRules;
+
+        // If updating (has id in options), modify the unique rule
+        if (isset($options['id'])) {
+            $rules['NoTrans'] = "required|max_length[11]|is_unique[discountheader.NoTrans,NoTrans,{$options['id']}]";
+        }
+
+        return $rules;
+    }
 
     /**
      * Get active promos (Status = 1, dalam periode berlaku)

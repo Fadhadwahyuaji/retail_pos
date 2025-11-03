@@ -55,6 +55,21 @@ $routes->group('admin', ['filter' => 'role:AD'], function ($routes) {
     // AJAX endpoints
     $routes->get('barang/search', 'Admin\BarangController::search');
     $routes->get('barang/get-by-barcode', 'Admin\BarangController::getByBarcode');
+
+    // Promo CRUD
+    $routes->get('promo', 'Admin\PromoController::index');
+    $routes->get('promo/create', 'Admin\PromoController::create');
+    $routes->post('promo/store', 'Admin\PromoController::store');
+    $routes->get('promo/detail/(:segment)', 'Admin\PromoController::detail/$1');
+    $routes->get('promo/edit/(:segment)', 'Admin\PromoController::edit/$1');
+    $routes->post('promo/update/(:segment)', 'Admin\PromoController::update/$1');
+    $routes->get('promo/delete/(:segment)', 'Admin\PromoController::delete/$1');
+    $routes->get('promo/toggle-status/(:segment)', 'Admin\PromoController::toggleStatus/$1');
+    // Promo Items Management
+    $routes->get('promo/items/(:segment)', 'Admin\PromoController::items/$1');
+    $routes->post('promo/add-item', 'Admin\PromoController::addItem');
+    $routes->post('promo/remove-item', 'Admin\PromoController::removeItem');
+    $routes->post('promo/calculate-discount', 'Admin\PromoController::calculateDiscount');
 });
 
 // Manajer routes (Admin Pusat dan Manajer Outlet - AD, MG)

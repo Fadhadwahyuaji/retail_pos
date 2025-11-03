@@ -117,6 +117,17 @@ $nama_role = session()->get('nama_role');
                                 Manajemen Barang
                             </a>
                         </li>
+                        <li>
+                            <a href="<?= base_url('admin/promo') ?>"
+                                class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-700">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path
+                                        d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z">
+                                    </path>
+                                </svg>
+                                Manajemen Promo
+                            </a>
+                        </li>
                     </ul>
                 </li>
             <?php endif; ?>

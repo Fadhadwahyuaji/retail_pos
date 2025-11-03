@@ -65,8 +65,11 @@ class PromoController extends BaseController
      */
     public function store()
     {
+        // Get validation rules for creation (without id)
+        $rules = $this->promoModel->getValidationRules();
+
         // Validation
-        if (!$this->validate($this->promoModel->getValidationRules())) {
+        if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
         }
 
@@ -141,9 +144,8 @@ class PromoController extends BaseController
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Promo tidak ditemukan');
         }
 
-        // Validation rules
-        $rules = $this->promoModel->getValidationRules();
-        $rules['NoTrans'] = "required|max_length[11]|is_unique[discountheader.NoTrans,NoTrans,{$noTrans}]";
+        // Get validation rules for update (with id)
+        $rules = $this->promoModel->getValidationRules(['id' => $noTrans]);
 
         if (!$this->validate($rules)) {
             return redirect()->back()->withInput()->with('errors', $this->validator->getErrors());
@@ -251,34 +253,171 @@ class PromoController extends BaseController
      */
     public function addItem()
     {
-        if ($this->request->isAJAX()) {
+        // Set response headers
+        header('Content-Type: application/json');
+
+        // Log semua data request untuk debugging
+        log_message('info', '=== ADD ITEM DEBUG START ===');
+        log_message('info', 'Request Method: ' . $this->request->getMethod());
+        log_message('info', 'Is AJAX: ' . ($this->request->isAJAX() ? 'Yes' : 'No'));
+        log_message('info', 'Headers: ' . json_encode($this->request->headers()));
+        log_message('info', 'GET Data: ' . json_encode($this->request->getGet()));
+        log_message('info', 'POST Data: ' . json_encode($this->request->getPost()));
+        log_message('info', 'Raw Input: ' . file_get_contents('php://input'));
+
+        try {
+            // Basic request validation
+            if ($this->request->getMethod() !== 'POST') {
+                log_message('error', 'Not a POST request');
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Method harus POST, diterima: ' . $this->request->getMethod()
+                ]);
+            }
+
+            // Get form data
             $noTrans = $this->request->getPost('NoTrans');
             $pcode   = $this->request->getPost('PCode');
             $jenis   = $this->request->getPost('Jenis');
             $nilai   = $this->request->getPost('Nilai');
 
+            log_message('info', "Data diterima: NoTrans=$noTrans, PCode=$pcode, Jenis=$jenis, Nilai=$nilai");
+
+            // Validate required fields
+            if (empty($noTrans)) {
+                log_message('error', 'NoTrans empty');
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Kode promo tidak boleh kosong'
+                ]);
+            }
+
+            if (empty($pcode)) {
+                log_message('error', 'PCode empty');
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Produk harus dipilih'
+                ]);
+            }
+
+            if (empty($jenis)) {
+                log_message('error', 'Jenis empty');
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Jenis diskon harus dipilih'
+                ]);
+            }
+
+            if (empty($nilai)) {
+                log_message('error', 'Nilai empty');
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Nilai diskon harus diisi'
+                ]);
+            }
+
+            // Validate nilai
+            if (!is_numeric($nilai) || $nilai <= 0) {
+                log_message('error', 'Nilai invalid: ' . $nilai);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Nilai diskon harus berupa angka dan lebih dari 0'
+                ]);
+            }
+
+            // Validate percentage
+            if ($jenis == 'P' && $nilai > 100) {
+                log_message('error', 'Percentage too high: ' . $nilai);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Diskon persen maksimal 100%'
+                ]);
+            }
+
+            // Check if promo exists
+            $promo = $this->promoModel->find($noTrans);
+            if (!$promo) {
+                log_message('error', 'Promo not found: ' . $noTrans);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Promo tidak ditemukan'
+                ]);
+            }
+            log_message('info', 'Promo found: ' . json_encode($promo));
+
+            // Check if product exists
+            $db = \Config\Database::connect();
+            $product = $db->table('masterbarang')
+                ->where('PCode', $pcode)
+                ->get()
+                ->getRowArray();
+
+            if (!$product) {
+                log_message('error', 'Product not found: ' . $pcode);
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Produk tidak ditemukan'
+                ]);
+            }
+            log_message('info', 'Product found: ' . json_encode($product));
+
             // Check if item already exists
             if ($this->promoDetailModel->itemExists($noTrans, $pcode)) {
+                log_message('error', 'Item already exists');
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Produk sudah ada dalam promo'
                 ]);
             }
 
-            if ($this->promoDetailModel->addItem($noTrans, $pcode, $jenis, $nilai)) {
-                return $this->response->setJSON([
-                    'success' => true,
-                    'message' => 'Item berhasil ditambahkan'
-                ]);
-            } else {
+            // Validate discount against product price
+            if ($jenis == 'R' && $nilai > $product['Harga1c']) {
+                log_message('error', 'Discount amount too high');
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'Gagal menambahkan item'
+                    'message' => 'Diskon rupiah tidak boleh lebih dari harga produk (Rp ' . number_format($product['Harga1c'], 0, ',', '.') . ')'
                 ]);
             }
-        }
 
-        return $this->response->setStatusCode(403);
+            // Prepare insert data
+            $insertData = [
+                'NoTrans' => $noTrans,
+                'PCode'   => $pcode,
+                'Jenis'   => $jenis,
+                'Nilai'   => floatval($nilai)
+            ];
+
+            log_message('info', 'Attempting to insert: ' . json_encode($insertData));
+
+            // Insert item
+            $insertResult = $this->promoDetailModel->insert($insertData);
+            log_message('info', 'Insert result: ' . ($insertResult ? 'Success' : 'Failed'));
+
+            if ($insertResult) {
+                log_message('info', 'Item added successfully');
+                return $this->response->setJSON([
+                    'success' => true,
+                    'message' => 'Produk "' . $product['NamaLengkap'] . '" berhasil ditambahkan ke promo'
+                ]);
+            } else {
+                $errors = $this->promoDetailModel->errors();
+                log_message('error', 'Insert failed - Validation errors: ' . json_encode($errors));
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Gagal menambahkan item: ' . implode(', ', $errors)
+                ]);
+            }
+        } catch (\Exception $e) {
+            log_message('error', 'Exception in addItem: ' . $e->getMessage());
+            log_message('error', 'Exception trace: ' . $e->getTraceAsString());
+
+            return $this->response->setJSON([
+                'success' => false,
+                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+            ]);
+        } finally {
+            log_message('info', '=== ADD ITEM DEBUG END ===');
+        }
     }
 
     /**
