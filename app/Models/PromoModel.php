@@ -108,11 +108,41 @@ class PromoModel extends Model
         if ($promo) {
             $db = \Config\Database::connect();
             $builder = $db->table('discountdetail');
-            $items = $builder->select('discountdetail.*, masterbarang.NamaLengkap')
+            $items = $builder->select('discountdetail.*, masterbarang.NamaLengkap, masterbarang.Harga1c, masterbarang.Barcode1')
                 ->join('masterbarang', 'masterbarang.PCode = discountdetail.PCode')
                 ->where('discountdetail.NoTrans', $noTrans)
                 ->get()
                 ->getResultArray();
+
+            $promo['items'] = $items;
+        }
+
+        return $promo;
+    }
+
+    /**
+     * Get promo with items for detail view
+     */
+    public function getPromoWithItemsForDetail($noTrans)
+    {
+        $promo = $this->find($noTrans);
+
+        if ($promo) {
+            $db = \Config\Database::connect();
+
+            // Query dengan error handling untuk data yang mungkin tidak ada
+            $items = $db->query("
+            SELECT 
+                dd.*,
+                mb.NamaLengkap,
+                mb.Harga1c,
+                mb.Barcode1,
+                mb.Status as ProductStatus
+            FROM discountdetail dd
+            LEFT JOIN masterbarang mb ON mb.PCode = dd.PCode
+            WHERE dd.NoTrans = ?
+            ORDER BY mb.NamaLengkap ASC
+        ", [$noTrans])->getResultArray();
 
             $promo['items'] = $items;
         }

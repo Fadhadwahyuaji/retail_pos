@@ -248,30 +248,29 @@ class PromoController extends BaseController
         return view('admin/promo/items', $data);
     }
 
+
     /**
      * Add item to promo (AJAX)
      */
     public function addItem()
     {
         // Set response headers
-        header('Content-Type: application/json');
-
-        // Log semua data request untuk debugging
-        log_message('info', '=== ADD ITEM DEBUG START ===');
-        log_message('info', 'Request Method: ' . $this->request->getMethod());
-        log_message('info', 'Is AJAX: ' . ($this->request->isAJAX() ? 'Yes' : 'No'));
-        log_message('info', 'Headers: ' . json_encode($this->request->headers()));
-        log_message('info', 'GET Data: ' . json_encode($this->request->getGet()));
-        log_message('info', 'POST Data: ' . json_encode($this->request->getPost()));
-        log_message('info', 'Raw Input: ' . file_get_contents('php://input'));
+        $this->response->setContentType('application/json');
 
         try {
-            // Basic request validation
+            // Validate request method
             if ($this->request->getMethod() !== 'POST') {
-                log_message('error', 'Not a POST request');
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'Method harus POST, diterima: ' . $this->request->getMethod()
+                    'message' => 'Method tidak valid'
+                ]);
+            }
+
+            // Validate AJAX request (optional untuk keamanan)
+            if (!$this->request->isAJAX()) {
+                return $this->response->setJSON([
+                    'success' => false,
+                    'message' => 'Request tidak valid'
                 ]);
             }
 
@@ -281,11 +280,8 @@ class PromoController extends BaseController
             $jenis   = $this->request->getPost('Jenis');
             $nilai   = $this->request->getPost('Nilai');
 
-            log_message('info', "Data diterima: NoTrans=$noTrans, PCode=$pcode, Jenis=$jenis, Nilai=$nilai");
-
             // Validate required fields
             if (empty($noTrans)) {
-                log_message('error', 'NoTrans empty');
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Kode promo tidak boleh kosong'
@@ -293,41 +289,28 @@ class PromoController extends BaseController
             }
 
             if (empty($pcode)) {
-                log_message('error', 'PCode empty');
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Produk harus dipilih'
                 ]);
             }
 
-            if (empty($jenis)) {
-                log_message('error', 'Jenis empty');
+            if (empty($jenis) || !in_array($jenis, ['P', 'R'])) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'Jenis diskon harus dipilih'
+                    'message' => 'Jenis diskon harus dipilih (P/R)'
                 ]);
             }
 
-            if (empty($nilai)) {
-                log_message('error', 'Nilai empty');
+            if (empty($nilai) || !is_numeric($nilai) || $nilai <= 0) {
                 return $this->response->setJSON([
                     'success' => false,
-                    'message' => 'Nilai diskon harus diisi'
-                ]);
-            }
-
-            // Validate nilai
-            if (!is_numeric($nilai) || $nilai <= 0) {
-                log_message('error', 'Nilai invalid: ' . $nilai);
-                return $this->response->setJSON([
-                    'success' => false,
-                    'message' => 'Nilai diskon harus berupa angka dan lebih dari 0'
+                    'message' => 'Nilai diskon harus berupa angka lebih dari 0'
                 ]);
             }
 
             // Validate percentage
             if ($jenis == 'P' && $nilai > 100) {
-                log_message('error', 'Percentage too high: ' . $nilai);
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Diskon persen maksimal 100%'
@@ -337,13 +320,11 @@ class PromoController extends BaseController
             // Check if promo exists
             $promo = $this->promoModel->find($noTrans);
             if (!$promo) {
-                log_message('error', 'Promo not found: ' . $noTrans);
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Promo tidak ditemukan'
                 ]);
             }
-            log_message('info', 'Promo found: ' . json_encode($promo));
 
             // Check if product exists
             $db = \Config\Database::connect();
@@ -353,17 +334,14 @@ class PromoController extends BaseController
                 ->getRowArray();
 
             if (!$product) {
-                log_message('error', 'Product not found: ' . $pcode);
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Produk tidak ditemukan'
                 ]);
             }
-            log_message('info', 'Product found: ' . json_encode($product));
 
-            // Check if item already exists
+            // Check if item already exists in promo
             if ($this->promoDetailModel->itemExists($noTrans, $pcode)) {
-                log_message('error', 'Item already exists');
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Produk sudah ada dalam promo'
@@ -372,7 +350,6 @@ class PromoController extends BaseController
 
             // Validate discount against product price
             if ($jenis == 'R' && $nilai > $product['Harga1c']) {
-                log_message('error', 'Discount amount too high');
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Diskon rupiah tidak boleh lebih dari harga produk (Rp ' . number_format($product['Harga1c'], 0, ',', '.') . ')'
@@ -387,36 +364,34 @@ class PromoController extends BaseController
                 'Nilai'   => floatval($nilai)
             ];
 
-            log_message('info', 'Attempting to insert: ' . json_encode($insertData));
-
             // Insert item
-            $insertResult = $this->promoDetailModel->insert($insertData);
-            log_message('info', 'Insert result: ' . ($insertResult ? 'Success' : 'Failed'));
+            if ($this->promoDetailModel->insert($insertData)) {
+                // Log successful addition for monitoring
+                log_message('info', "Promo item added - NoTrans: $noTrans, PCode: $pcode, User: " . session()->get('username'));
 
-            if ($insertResult) {
-                log_message('info', 'Item added successfully');
                 return $this->response->setJSON([
                     'success' => true,
                     'message' => 'Produk "' . $product['NamaLengkap'] . '" berhasil ditambahkan ke promo'
                 ]);
             } else {
                 $errors = $this->promoDetailModel->errors();
-                log_message('error', 'Insert failed - Validation errors: ' . json_encode($errors));
+
+                // Log validation errors
+                log_message('error', "Failed to add promo item - Validation: " . json_encode($errors));
+
                 return $this->response->setJSON([
                     'success' => false,
                     'message' => 'Gagal menambahkan item: ' . implode(', ', $errors)
                 ]);
             }
         } catch (\Exception $e) {
-            log_message('error', 'Exception in addItem: ' . $e->getMessage());
-            log_message('error', 'Exception trace: ' . $e->getTraceAsString());
+            // Log critical errors
+            log_message('critical', "Exception in addItem - Message: {$e->getMessage()}, File: {$e->getFile()}, Line: {$e->getLine()}");
 
             return $this->response->setJSON([
                 'success' => false,
-                'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                'message' => 'Terjadi kesalahan sistem. Silakan coba lagi.'
             ]);
-        } finally {
-            log_message('info', '=== ADD ITEM DEBUG END ===');
         }
     }
 
@@ -468,18 +443,33 @@ class PromoController extends BaseController
      */
     public function detail($noTrans)
     {
-        $promo = $this->promoModel->getPromoWithItems($noTrans);
+        // Gunakan method khusus untuk detail view
+        $promo = $this->promoModel->getPromoWithItemsForDetail($noTrans);
 
         if (!$promo) {
             throw new \CodeIgniter\Exceptions\PageNotFoundException('Promo tidak ditemukan');
         }
 
+        // Get stats
         $stats = $this->promoModel->getPromoStats($noTrans);
+
+        // Check for orphaned items (products that no longer exist)
+        $orphanedItems = [];
+        foreach ($promo['items'] as $item) {
+            if (!$item['NamaLengkap']) {
+                $orphanedItems[] = $item['PCode'];
+            }
+        }
+
+        if (!empty($orphanedItems)) {
+            log_message('warning', "Promo $noTrans has orphaned items: " . implode(', ', $orphanedItems));
+        }
 
         $data = [
             'title' => 'Detail Promo',
             'promo' => $promo,
-            'stats' => $stats
+            'stats' => $stats,
+            'orphanedItems' => $orphanedItems
         ];
 
         return view('admin/promo/detail', $data);

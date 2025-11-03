@@ -214,7 +214,8 @@
                             <tbody class="bg-white divide-y divide-gray-200">
                                 <?php $no = 1; ?>
                                 <?php foreach ($promo['items'] as $item):
-                                    $hargaNormal = $item['Harga1c'];
+                                    // Pastikan data harga tersedia
+                                    $hargaNormal = isset($item['Harga1c']) ? $item['Harga1c'] : 0;
                                     $discountAmount = 0;
 
                                     if ($item['Jenis'] == 'P') {
@@ -229,12 +230,17 @@
                                     <tr class="hover:bg-gray-50">
                                         <td class="px-4 py-3 text-sm text-gray-900"><?= $no++ ?></td>
                                         <td class="px-4 py-3">
-                                            <div class="text-sm font-medium text-gray-900"><?= esc($item['NamaLengkap']) ?>
+                                            <div class="text-sm font-medium text-gray-900">
+                                                <?= esc($item['NamaLengkap'] ?? 'Produk tidak ditemukan') ?>
                                             </div>
                                             <div class="text-xs text-gray-500 font-mono"><?= esc($item['PCode']) ?></div>
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm text-gray-900">
-                                            Rp <?= number_format($hargaNormal, 0, ',', '.') ?>
+                                            <?php if ($hargaNormal > 0): ?>
+                                                Rp <?= number_format($hargaNormal, 0, ',', '.') ?>
+                                            <?php else: ?>
+                                                <span class="text-red-500">Data harga tidak tersedia</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <span
@@ -247,13 +253,21 @@
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 text-right text-sm font-bold text-green-600">
-                                            Rp <?= number_format($hargaPromo, 0, ',', '.') ?>
+                                            <?php if ($hargaNormal > 0): ?>
+                                                Rp <?= number_format($hargaPromo, 0, ',', '.') ?>
+                                            <?php else: ?>
+                                                <span class="text-red-500">-</span>
+                                            <?php endif; ?>
                                         </td>
                                         <td class="px-4 py-3 text-center">
-                                            <span
-                                                class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
-                                                <?= $savePercent ?>%
-                                            </span>
+                                            <?php if ($hargaNormal > 0): ?>
+                                                <span
+                                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                                                    <?= $savePercent ?>%
+                                                </span>
+                                            <?php else: ?>
+                                                <span class="text-red-500">-</span>
+                                            <?php endif; ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

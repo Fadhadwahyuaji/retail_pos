@@ -46,6 +46,8 @@ class PromoDetailModel extends Model
 
     // Custom Methods
 
+
+
     /**
      * Get items by promo
      */
@@ -70,6 +72,18 @@ class PromoDetailModel extends Model
         ];
 
         return $this->insert($data);
+    }
+
+    /**
+     * Check if item exists in promo
+     */
+    public function itemExists($noTrans, $pcode)
+    {
+        $count = $this->where('NoTrans', $noTrans)
+            ->where('PCode', $pcode)
+            ->countAllResults();
+
+        return $count > 0;
     }
 
     /**
@@ -102,18 +116,6 @@ class PromoDetailModel extends Model
     public function deleteItemsByPromo($noTrans)
     {
         return $this->where('NoTrans', $noTrans)->delete();
-    }
-
-    /**
-     * Check if item exists in promo
-     */
-    public function itemExists($noTrans, $pcode)
-    {
-        $count = $this->where('NoTrans', $noTrans)
-            ->where('PCode', $pcode)
-            ->countAllResults();
-
-        return $count > 0;
     }
 
     /**
