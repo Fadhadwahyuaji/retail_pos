@@ -6,7 +6,7 @@
     <title><?= $title ?? 'Aplikasi CI4 POS' ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 </head>
 
 <body class="bg-gray-50 dark:bg-gray-900">
@@ -20,10 +20,12 @@
             <?= $this->renderSection('content') ?>
         </div>
 
-        <?= $this->include('layouts/includes/footer') ?>
+        <!-- <?= $this->include('layouts/includes/footer') ?> -->
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/preline/dist/preline.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/preline/dist/preline.js"></script> -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <?= $this->renderSection('scripts') ?>
 </body>
 
 </html>

@@ -25,7 +25,6 @@ class UserModel extends Model
     protected $beforeInsert = ['hashPassword'];
     protected $beforeUpdate = ['hashPassword'];
 
-    // Fungsi untuk hashing password
     protected function hashPassword(array $data)
     {
         if (!isset($data['data']['password'])) {
@@ -36,7 +35,6 @@ class UserModel extends Model
         return $data;
     }
 
-    // Helper function untuk mendapatkan user dengan role info
     public function getUserWithRole($email)
     {
         return $this->select('users.*, roles.KdRole as kd_role, roles.nama_role')
@@ -45,11 +43,11 @@ class UserModel extends Model
             ->first();
     }
 
-    // Helper function untuk mendapatkan semua users dengan role info
     public function getAllUsersWithRole()
     {
-        return $this->select('users.*, roles.KdRole as kd_role, roles.nama_role')
+        return $this->select('users.id, users.nama, users.email, users.is_active, roles.KdRole as kd_role, roles.nama_role')
             ->join('roles', 'roles.id = users.role_id', 'left')
+            ->orderBy('users.nama', 'ASC')
             ->findAll();
     }
     // protected $table            = 'users';

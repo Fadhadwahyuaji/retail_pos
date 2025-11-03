@@ -96,7 +96,7 @@ $nama_role = session()->get('nama_role');
                             </a>
                         </li>
                         <li>
-                            <a href="<?= base_url('admin/manajemen-outlet') ?>"
+                            <a href="<?= base_url('admin/outlet') ?>"
                                 class="flex items-center w-full p-2 text-gray-900 transition duration-75 rounded-lg pl-11 group hover:bg-gray-100 dark:text-white dark:hover:bg-neutral-700">
                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd"
