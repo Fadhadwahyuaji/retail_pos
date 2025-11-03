@@ -104,9 +104,4 @@ $routes->group('kasir', ['filter' => 'role:KS'], function ($routes) {
     $routes->get('pos/get-product-list', 'Kasir\POSController::getProductList');
     $routes->post('pos/calculate-cart', 'Kasir\POSController::calculateCart');
     $routes->post('pos/save-transaction', 'Kasir\POSController::saveTransaction');
-
-    // Print & History
-    $routes->get('pos/print-struk/(:segment)/(:segment)', 'Kasir\POSController::printStruk/$1/$2');
-    $routes->get('pos/transaction-history', 'Kasir\POSController::getTransactionHistory');
-    $routes->post('pos/void-transaction', 'Kasir\POSController::voidTransaction');
 });
