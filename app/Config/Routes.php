@@ -5,7 +5,7 @@ use CodeIgniter\Router\RouteCollection;
 /**
  * @var RouteCollection $routes
  */
-$routes->get('/', 'Home::index');
+$routes->get('/', 'Auth::index');
 
 $routes->get('/login', 'Auth::index');
 $routes->post('/auth/login', 'Auth::login');
@@ -70,18 +70,43 @@ $routes->group('admin', ['filter' => 'role:AD'], function ($routes) {
     $routes->post('promo/add-item', 'Admin\PromoController::addItem');
     $routes->post('promo/remove-item', 'Admin\PromoController::removeItem');
     $routes->post('promo/calculate-discount', 'Admin\PromoController::calculateDiscount');
+
+    // Report Dashboard
+    $routes->get('report', 'Admin\ReportController::index');
+    $routes->get('dashboard', 'Admin\ReportController::dashboard');
+
+    // Sales Summary (Per Outlet)
+    $routes->get('report/sales-summary', 'Admin\ReportController::salesSummary');
+    $routes->get('report/export-summary', 'Admin\ReportController::exportSummary');
+
+    // Sales Detail (Transactions)
+    $routes->get('report/sales-detail', 'Admin\ReportController::salesDetail');
+    $routes->get('report/export-detail', 'Admin\ReportController::exportDetail');
+
+    // Transaction Detail (Items)
+    $routes->get('report/transaction-detail/(:segment)/(:segment)', 'Admin\ReportController::transactionDetail/$1/$2');
 });
 
 // Manajer routes (Admin Pusat dan Manajer Outlet - AD, MG)
 $routes->group('manajer', ['filter' => 'role:MG'], function ($routes) {
     $routes->get('laporan-outlet', 'Manajer\LaporanController::index');
-    $routes->get('laporan-outlet/detail/(:num)', 'Manajer\LaporanController::detail/$1');
+    $routes->get('laporan-outlet/detail/(:segment)', 'Manajer\LaporanController::detail/$1');
     $routes->get('laporan-outlet/export', 'Manajer\LaporanController::export');
 });
 
 // Kasir routes (semua role bisa akses - AD, MG, KS)
 $routes->group('kasir', ['filter' => 'role:KS'], function ($routes) {
-    $routes->get('transaksi-pos', 'Kasir\TransaksiController::index');
-    $routes->post('transaksi-pos/process', 'Kasir\TransaksiController::process');
-    $routes->get('transaksi-pos/history', 'Kasir\TransaksiController::history');
+    // POS Main
+    $routes->get('pos', 'Kasir\POSController::index');
+
+    // POS Operations (AJAX)
+    $routes->post('pos/search-product', 'Kasir\POSController::searchProduct');
+    $routes->get('pos/get-product-list', 'Kasir\POSController::getProductList');
+    $routes->post('pos/calculate-cart', 'Kasir\POSController::calculateCart');
+    $routes->post('pos/save-transaction', 'Kasir\POSController::saveTransaction');
+
+    // Print & History
+    $routes->get('pos/print-struk/(:segment)/(:segment)', 'Kasir\POSController::printStruk/$1/$2');
+    $routes->get('pos/transaction-history', 'Kasir\POSController::getTransactionHistory');
+    $routes->post('pos/void-transaction', 'Kasir\POSController::voidTransaction');
 });

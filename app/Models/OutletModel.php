@@ -55,6 +55,9 @@ class OutletModel extends Model
     /**
      * Get all active outlets
      */
+    /**
+     * Get active outlets
+     */
     public function getActiveOutlets()
     {
         return $this->where('is_active', 1)->findAll();

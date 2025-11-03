@@ -178,6 +178,25 @@ class BarangModel extends Model
     }
 
     /**
+     * Find single product by keyword (PCode, Barcode, or Name)
+     * Used by POS system for barcode scanning or manual search
+     */
+    public function findProductByKeyword($keyword)
+    {
+        return $this->groupStart()
+            ->where('PCode', $keyword)
+            ->orWhere('Barcode1', $keyword)
+            ->orWhere('Barcode2', $keyword)
+            ->orWhere('Barcode3', $keyword)
+            ->orLike('NamaLengkap', $keyword)
+            ->groupEnd()
+            ->where('FlagReady', 'Y')
+            ->where('Status', 'T')
+            ->first(); // Return single result, not array
+    }
+
+
+    /**
      * Get product by barcode
      */
     public function getByBarcode($barcode)

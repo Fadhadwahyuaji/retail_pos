@@ -13,6 +13,8 @@ class DatabaseSeeder extends Seeder
         $this->call('OutletSeeder');
         $this->call('UserSeeder');
         $this->call('BarangSeeder');
+        $this->call('PromoSeeder');
+        $this->call('TransaksiSeeder');
 
         echo "\n✅ All seeders completed successfully!\n";
     }
