@@ -1,6 +1,5 @@
 <?php
 $this->extend('layouts/main');
-
 $this->section('content');
 ?>
 <div class="min-h-screen">
@@ -11,7 +10,6 @@ $this->section('content');
                 class="font-semibold"><?= esc($user['nama']) ?></span>!</p>
     </div>
 
-    <!-- Statistics Cards (if available) -->
     <?php if ($user['kd_role'] == 'AD'): ?>
         <!-- Admin Statistics -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -20,7 +18,8 @@ $this->section('content');
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Outlet</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                            <?= number_format($stats['total_outlets']) ?></p>
                     </div>
                     <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
                         <svg class="w-6 h-6 text-blue-600 dark:text-blue-300" fill="none" stroke="currentColor"
@@ -38,7 +37,8 @@ $this->section('content');
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total User</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                            <?= number_format($stats['total_users']) ?></p>
                     </div>
                     <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
                         <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor"
@@ -56,7 +56,8 @@ $this->section('content');
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Barang</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                            <?= number_format($stats['total_barang']) ?></p>
                     </div>
                     <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
                         <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor"
@@ -73,13 +74,51 @@ $this->section('content');
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Promo Aktif</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                            <?= number_format($stats['active_promos']) ?></p>
                     </div>
                     <div class="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-full">
                         <svg class="w-6 h-6 text-yellow-600 dark:text-yellow-300" fill="none" stroke="currentColor"
                             viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Today's Summary -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-blue-100">Transaksi Hari Ini</p>
+                        <p class="text-3xl font-bold mt-1"><?= number_format($stats['today_transactions']) ?></p>
+                        <p class="text-xs text-blue-100 mt-2">Semua Outlet</p>
+                    </div>
+                    <div class="p-4 bg-white bg-opacity-20 rounded-full">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                            </path>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gradient-to-r from-green-500 to-green-600 rounded-lg shadow-lg p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-green-100">Penjualan Hari Ini</p>
+                        <p class="text-3xl font-bold mt-1">Rp <?= number_format($stats['today_sales'], 0, ',', '.') ?></p>
+                        <p class="text-xs text-green-100 mt-2">Semua Outlet</p>
+                    </div>
+                    <div class="p-4 bg-white bg-opacity-20 rounded-full">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
                             </path>
                         </svg>
                     </div>
@@ -155,7 +194,6 @@ $this->section('content');
     <?php elseif ($user['kd_role'] == 'MG'): ?>
         <!-- Manager Statistics -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <!-- Outlet Info -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between">
                     <div>
@@ -174,12 +212,12 @@ $this->section('content');
                 </div>
             </div>
 
-            <!-- Sales Today -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Penjualan Hari Ini</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">Rp -</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">Rp
+                            <?= number_format($stats['today_sales'], 0, ',', '.') ?></p>
                     </div>
                     <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
                         <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor"
@@ -192,12 +230,12 @@ $this->section('content');
                 </div>
             </div>
 
-            <!-- Transactions Today -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Transaksi Hari Ini</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                            <?= number_format($stats['today_transactions']) ?></p>
                     </div>
                     <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
                         <svg class="w-6 h-6 text-purple-600 dark:text-purple-300" fill="none" stroke="currentColor"
@@ -211,7 +249,7 @@ $this->section('content');
             </div>
         </div>
 
-        <!-- Quick Actions -->
+        <!-- Quick Actions for Manager -->
         <div class="bg-white dark:bg-gray-800 shadow-sm rounded-lg p-6 mb-8 border border-gray-200 dark:border-gray-700">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -229,28 +267,12 @@ $this->section('content');
                         <p class="text-sm text-gray-600 dark:text-gray-300">Lihat laporan dan analisis</p>
                     </div>
                 </a>
-
-                <!-- <a href="<?= base_url('kasir/pos') ?>"
-                    class="flex items-center p-4 bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900 dark:to-green-800 rounded-lg hover:shadow-md transition-shadow border border-green-200 dark:border-green-700">
-                    <div class="flex-shrink-0 p-3 bg-green-600 rounded-lg">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z">
-                            </path>
-                        </svg>
-                    </div>
-                    <div class="ml-4">
-                        <h4 class="font-semibold text-gray-900 dark:text-white">POS System</h4>
-                        <p class="text-sm text-gray-600 dark:text-gray-300">Akses sistem kasir</p>
-                    </div>
-                </a> -->
             </div>
         </div>
 
     <?php else: ?>
         <!-- Cashier Interface -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-            <!-- Outlet Info -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between">
                     <div>
@@ -269,12 +291,12 @@ $this->section('content');
                 </div>
             </div>
 
-            <!-- Today's Sales -->
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 border border-gray-200 dark:border-gray-700">
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Transaksi Hari Ini</p>
-                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">-</p>
+                        <p class="text-2xl font-bold text-gray-900 dark:text-white mt-1">
+                            <?= number_format($stats['today_transactions']) ?></p>
                     </div>
                     <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
                         <svg class="w-6 h-6 text-green-600 dark:text-green-300" fill="none" stroke="currentColor"
@@ -288,7 +310,7 @@ $this->section('content');
             </div>
         </div>
 
-        <!-- Start Transaction -->
+        <!-- Start Transaction Button -->
         <div class="bg-gradient-to-r from-green-500 to-blue-600 rounded-lg shadow-lg p-8 text-center">
             <h3 class="text-2xl font-bold text-white mb-4">Siap Melayani!</h3>
             <p class="text-white text-opacity-90 mb-6">Mulai transaksi penjualan baru</p>
@@ -310,9 +332,8 @@ $this->section('content');
             <div class="flex-shrink-0">
                 <div
                     class="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                    <span class="text-2xl font-bold text-white">
-                        <?= strtoupper(substr(esc($user['nama']), 0, 1)) ?>
-                    </span>
+                    <span
+                        class="text-2xl font-bold text-white"><?= strtoupper(substr(esc($user['nama']), 0, 1)) ?></span>
                 </div>
             </div>
             <div class="ml-4">
