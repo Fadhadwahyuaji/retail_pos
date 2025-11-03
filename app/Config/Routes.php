@@ -32,13 +32,20 @@ $routes->group('admin', ['filter' => 'role:AD'], function ($routes) {
     $routes->get('outlet/delete/(:num)', 'Admin\OutletController::delete/$1');
     $routes->get('outlet/toggle-status/(:num)', 'Admin\OutletController::toggleStatus/$1');
 
-    // Alternative routes for manajemen-outlet
-    // $routes->get('manajemen-outlet', 'Admin\OutletController::index');
-    // $routes->get('manajemen-outlet/create', 'Admin\OutletController::create');
-    // $routes->post('manajemen-outlet/store', 'Admin\OutletController::store');
-    // $routes->get('manajemen-outlet/edit/(:num)', 'Admin\OutletController::edit/$1');
-    // $routes->post('manajemen-outlet/update/(:num)', 'Admin\OutletController::update/$1');
-    // $routes->get('manajemen-outlet/delete/(:num)', 'Admin\OutletController::delete/$1');
+    // Barang CRUD - Fixed namespace
+    $routes->get('barang', 'Admin\BarangController::index');
+    $routes->get('barang/create', 'Admin\BarangController::create');
+    $routes->post('barang/store', 'Admin\BarangController::store');
+    $routes->get('barang/detail/(:segment)', 'Admin\BarangController::detail/$1');
+    $routes->get('barang/edit/(:segment)', 'Admin\BarangController::edit/$1');
+    $routes->post('barang/update/(:segment)', 'Admin\BarangController::update/$1');
+    $routes->get('barang/delete/(:segment)', 'Admin\BarangController::delete/$1');
+    $routes->get('barang/toggle-status/(:segment)', 'Admin\BarangController::toggleStatus/$1');
+    $routes->get('barang/toggle-ready/(:segment)', 'Admin\BarangController::toggleReady/$1');
+
+    // AJAX endpoints
+    $routes->get('barang/search', 'Admin\BarangController::search');
+    $routes->get('barang/get-by-barcode', 'Admin\BarangController::getByBarcode');
 });
 
 // Manajer routes (Admin Pusat dan Manajer Outlet - AD, MG)
