@@ -597,17 +597,17 @@ Setelah setup seeder, gunakan kredensial berikut:
 
 **Admin Pusat:**
 
-- Email: `admin@retailpos.com`
+- Email: `admin@pos.com`
 - Password: `admin123`
 
 **Manajer Outlet:**
 
-- Email: `manajer@outlet1.com`
-- Password: `manajer123`
+- Email: `manager.cbpusat@pos.com`
+- Password: `manager123`
 
 **Kasir:**
 
-- Email: `kasir@outlet1.com`
+- Email: `kasir.cbpusat@pos.com`
 - Password: `kasir123`
 
 > ⚠️ **PENTING**: Segera ganti password default setelah login pertama kali!
