@@ -60,12 +60,12 @@ class PromoModel extends Model
 
     // Custom Methods
 
-    // Custom method to get validation rules with dynamic unique rule
+    // mendapatkan aturan validasi dengan opsi untuk update
     public function getValidationRules(array $options = []): array
     {
         $rules = $this->validationRules;
 
-        // If updating (has id in options), modify the unique rule
+        // jika ada id, artinya update, ubah aturan NoTrans agar mengabaikan record dengan id tersebut
         if (isset($options['id'])) {
             $rules['NoTrans'] = "required|max_length[11]|is_unique[discountheader.NoTrans,NoTrans,{$options['id']}]";
         }
@@ -95,7 +95,7 @@ class PromoModel extends Model
         return $this->select('discountheader.*, outlets.nama_outlet, outlets.KdStore')
             ->join('outlets', 'outlets.id = discountheader.outlet_id', 'left')
             ->orderBy('discountheader.TglTrans', 'DESC')
-            ->findAll();
+            ->findAll(); // jalankan query
     }
 
     /**
@@ -304,12 +304,12 @@ class PromoModel extends Model
     {
         $db = \Config\Database::connect();
 
-        // Count items in promo
+        // hitung item dalam promo
         $itemCount = $db->table('discountdetail')
             ->where('NoTrans', $noTrans)
             ->countAllResults();
 
-        // Count transactions using this promo
+        // hitung transaksi yang menggunakan promo ini
         $transCount = $db->table('transaksi_detail')
             ->groupStart()
             ->where('Ketentuan1', $noTrans)

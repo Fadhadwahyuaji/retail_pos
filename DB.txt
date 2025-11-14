@@ -1,0 +1,70 @@
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         DATABASE: retail_pos                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────┐         ┌──────────────┐         ┌──────────────────┐
+│    roles     │◄────────│    users     │────────►│     outlets      │
+│              │  1   *  │              │  *   1  │                  │
+│ id (PK)      │         │ id (PK)      │         │ id (PK)          │
+│ KdRole       │         │ role_id (FK) │         │ KdStore          │
+│ nama_role    │         │ outlet_id FK │         │ nama_outlet      │
+└──────────────┘         │ nama         │         │ alamat           │
+                         │ email        │         │ telepon          │
+                         │ password     │         │ is_active        │
+                         │ is_active    │         └──────────────────┘
+                         └──────────────┘                   │
+                                                            │ 1
+                                                            │
+                                                            │ *
+                         ┌──────────────┐         ┌─────────────────┐
+                         │masterbarang  │         │transaksi_header │
+                         │              │         │                 │
+                         │ PCode (PK)   │◄────┐   │ NoKassa (PK,FK) │
+                         │ NamaLengkap  │     │   │ NoStruk (PK)    │
+                         │ NamaStruk    │     │   │ TglJual         │
+                         │ Barcode1-3   │     │   │ JamJual         │
+                         │ Harga1c      │     │   │ UserId (FK)     │
+                         │ Harga1b      │     │   │ TotalItem       │
+                         │ HPP          │     │   │ TotalNilai      │
+                         │ SatuanSt     │     │   │ Discount        │
+                         │ Status       │     │   │ TotalBayar      │
+                         │ FlagReady    │     │   │ Tunai           │
+                         └──────────────┘     │   │ KKredit         │
+                                │             │   │ KDebit          │
+                                │             │   │ GoPay           │
+                                │ *           │   │ Voucher         │
+                                │             │   │ Kembali         │
+                                │             │   │ Status          │
+                         ┌──────▼───────┐    │   └─────────────────┘
+                         │discountdetail│    │            │
+                         │              │    │            │ 1
+                         │ NoTrans (PFK)│    │            │
+                         │ PCode (PK,FK)│────┘            │
+                         │ Jenis        │                 │ *
+                         │ Nilai        │         ┌───────▼────────┐
+                         └──────────────┘         │transaksi_detail│
+                                │                 │                │
+                                │ *               │ NoKassa (PK,FK)│
+                                │                 │ NoStruk (PK,FK)│
+                                │ 1               │ PCode (FK)     │
+                         ┌──────▼───────┐         │ Qty            │
+                         │discountheader│         │ Harga          │
+                         │              │         │ Disc1          │
+                         │ NoTrans (PK) │         │ Jenis1         │
+                         │ Ketentuan    │         │ Ketentuan1 (FK)│
+                         │ TglAwal      │         │ Netto          │
+                         │ TglAkhir     │         │ Hpp            │
+                         │ jam_mulai    │         └────────────────┘
+                         │ jam_selesai  │
+                         │ hari_berlaku │
+                         │ outlet_id FK │
+                         │ Status       │
+                         └──────────────┘
+                                │
+                                │ *
+                                │
+                                │ 1
+                         ┌──────┴───────┐
+                         │   outlets    │
+                         │  (optional)  │
+                         └──────────────┘

@@ -144,8 +144,8 @@ class PromoDetailModel extends Model
         $db = \Config\Database::connect();
 
         // Get products already in promo
-        $usedProducts = $this->select('PCode')
-            ->where('NoTrans', $noTrans)
+        $usedProducts = $this->select('PCode') // mendapatkan PCode/barang dari item promo
+            ->where('NoTrans', $noTrans) // filter berdasarkan NoTrans
             ->findColumn('PCode');
 
         // Get all active products not in promo
@@ -155,7 +155,7 @@ class PromoDetailModel extends Model
             ->where('FlagReady', 'Y');
 
         if (!empty($usedProducts)) {
-            $builder->whereNotIn('PCode', $usedProducts);
+            $builder->whereNotIn('PCode', $usedProducts); // dikecualikan yang sudah ada di promo
         }
 
         return $builder->orderBy('NamaLengkap', 'ASC')

@@ -31,7 +31,7 @@ class PromoController extends BaseController
     {
         $promos = $this->promoModel->getPromosWithDetails();
 
-        // Add stats to each promo
+        // menambahkan statistik ke setiap promo
         foreach ($promos as &$promo) {
             $stats = $this->promoModel->getPromoStats($promo['NoTrans']);
             $promo['item_count'] = $stats['item_count'];
@@ -65,7 +65,7 @@ class PromoController extends BaseController
      */
     public function store()
     {
-        // Get validation rules for creation (without id)
+        // mendapatkan aturan validasi
         $rules = $this->promoModel->getValidationRules();
 
         // Validation
@@ -91,7 +91,7 @@ class PromoController extends BaseController
 
         // Prepare data
         $data = [
-            'NoTrans'      => strtoupper($this->request->getPost('NoTrans')),
+            'NoTrans'      => strtoupper($this->request->getPost('NoTrans')), // pastikan NoTrans uppercase
             'TglTrans'     => date('Y-m-d'),
             'Ketentuan'    => $this->request->getPost('Ketentuan'),
             'TglAwal'      => $tglAwal,
@@ -266,7 +266,7 @@ class PromoController extends BaseController
                 ]);
             }
 
-            // Validate AJAX request (optional untuk keamanan)
+            // Validate AJAX(javascript) request (untuk keamanan)
             if (!$this->request->isAJAX()) {
                 return $this->response->setJSON([
                     'success' => false,
@@ -275,10 +275,10 @@ class PromoController extends BaseController
             }
 
             // Get form data
-            $noTrans = $this->request->getPost('NoTrans');
-            $pcode   = $this->request->getPost('PCode');
-            $jenis   = $this->request->getPost('Jenis');
-            $nilai   = $this->request->getPost('Nilai');
+            $noTrans = $this->request->getPost('NoTrans'); // kode promo
+            $pcode   = $this->request->getPost('PCode'); // kode produk
+            $jenis   = $this->request->getPost('Jenis'); // P atau R
+            $nilai   = $this->request->getPost('Nilai'); // nilai diskon
 
             // Validate required fields
             if (empty($noTrans)) {
@@ -358,10 +358,10 @@ class PromoController extends BaseController
 
             // Prepare insert data
             $insertData = [
-                'NoTrans' => $noTrans,
-                'PCode'   => $pcode,
-                'Jenis'   => $jenis,
-                'Nilai'   => floatval($nilai)
+                'NoTrans' => $noTrans, // kode promo
+                'PCode'   => $pcode, // kode produk
+                'Jenis'   => $jenis, // P atau R
+                'Nilai'   => floatval($nilai) // nilai diskon
             ];
 
             // Insert item

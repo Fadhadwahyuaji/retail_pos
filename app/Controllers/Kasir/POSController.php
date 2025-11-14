@@ -43,7 +43,7 @@ class POSController extends BaseController
         $userId = session()->get('user_id');
         $kasir = session()->get('nama');
 
-        // Get outlet info untuk NoKassa
+        // Get outlet info 
         $outlet = $this->outletModel->find($userOutletId);
 
         if (!$outlet) {
@@ -98,7 +98,7 @@ class POSController extends BaseController
             ]);
         }
 
-        // UBAH: Ambil kdStore dari session, bukan dari POST
+        // Cek promo untuk produk ini
         $kdStore = session()->get('kdstore');
         $datetime = date('Y-m-d H:i:s');
 
@@ -203,7 +203,7 @@ class POSController extends BaseController
         $kdStore = session()->get('kdstore');
         $kasir = session()->get('nama');
         $userId = session()->get('user_id');
-        $noKassa = str_pad($userId, 3, '0', STR_PAD_LEFT);
+        $noKassa = str_pad($kdStore, 3, '0', STR_PAD_LEFT);
 
         // Data dari client
         $items = $this->request->getPost('items');

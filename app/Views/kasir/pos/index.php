@@ -16,7 +16,7 @@
                         <p class="text-sm text-gray-600">
                             <span
                                 class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 mr-2">
-                                Outlet: <?= $kdStore ?>
+                                Outlet: <?= $kdStore ?> - <?= $outlet_name ?>
                             </span>
                             <span
                                 class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -292,142 +292,145 @@
 
 <?= $this->section('scripts') ?>
 <script>
-// Global variables
-let cart = [];
-let currentPaymentMethod = 'tunai';
-let grandTotal = 0;
+    // Global variables
+    let cart = [];
+    let currentPaymentMethod = 'tunai';
+    let grandTotal = 0;
 
-// Initialize
-$(document).ready(function() {
-    updateDateTime();
-    setInterval(updateDateTime, 1000);
+    // Initialize
+    $(document).ready(function() {
+        updateDateTime();
+        setInterval(updateDateTime, 1000);
 
-    // Auto-focus scan input
-    $('#scanInput').focus();
+        // Auto-focus scan input
+        $('#scanInput').focus();
 
-    // Enter key on scan input
-    $('#scanInput').on('keypress', function(e) {
-        if (e.which === 13) {
-            searchProduct();
-        }
+        // Enter key on scan input
+        $('#scanInput').on('keypress', function(e) {
+            if (e.which === 13) {
+                searchProduct();
+            }
+        });
+
+        // Format payment amount input
+        $('#paymentAmount').on('input', function() {
+            let value = $(this).val().replace(/[^0-9]/g, '');
+            $(this).val(formatNumber(value));
+        });
     });
 
-    // Format payment amount input
-    $('#paymentAmount').on('input', function() {
-        let value = $(this).val().replace(/[^0-9]/g, '');
-        $(this).val(formatNumber(value));
-    });
-});
+    // Update date & time
+    function updateDateTime() {
+        const now = new Date();
+        const dateOptions = {
+            weekday: 'short',
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        };
+        const timeOptions = {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+        };
 
-// Update date & time
-function updateDateTime() {
-    const now = new Date();
-    const dateOptions = {
-        weekday: 'short',
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-    };
-    const timeOptions = {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    };
-
-    $('#currentDate').text(now.toLocaleDateString('id-ID', dateOptions));
-    $('#currentTime').text(now.toLocaleTimeString('id-ID', timeOptions));
-}
-
-// Search product
-function searchProduct() {
-    const keyword = $('#scanInput').val().trim();
-
-    if (!keyword) {
-        showAlert('error', 'Masukkan kode produk atau barcode');
-        return;
+        $('#currentDate').text(now.toLocaleDateString('id-ID', dateOptions));
+        $('#currentTime').text(now.toLocaleTimeString('id-ID', timeOptions));
     }
 
-    const kdStore = $('#hdnKdStore').val();
-    const usePromo = $('#autoPromo').is(':checked');
+    // Search product
+    function searchProduct() {
+        const keyword = $('#scanInput').val().trim();
 
-    $.ajax({
-        url: '<?= base_url('kasir/pos/search-product') ?>',
-        type: 'POST',
-        data: {
-            keyword: keyword,
-            kdStore: kdStore,
-            use_promo: usePromo
-        },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                addToCart(response.product);
-                $('#scanInput').val('').focus();
-
-                if (response.product.promo_available && !response.product.has_promo) {
-                    showAlert('info',
-                        `Produk ${response.product.NamaLengkap} memiliki promo yang tersedia`);
-                }
-            } else {
-                showAlert('error', response.message);
-                $('#scanInput').select();
-            }
-        },
-        error: function() {
-            showAlert('error', 'Gagal mencari produk');
+        if (!keyword) {
+            showAlert('error', 'Masukkan kode produk atau barcode');
+            return;
         }
-    });
-}
 
-// Add to cart
-function addToCart(product) {
-    const existingIndex = cart.findIndex(item => item.pcode === product.PCode);
+        const kdStore = $('#hdnKdStore').val();
+        const usePromo = $('#autoPromo').is(':checked');
 
-    if (existingIndex !== -1) {
-        cart[existingIndex].qty += 1;
-    } else {
-        cart.push({
-            pcode: product.PCode,
-            nama: product.NamaStruk || product.NamaLengkap,
-            price: parseFloat(product.Harga1c),
-            qty: 1,
-            discount: parseFloat(product.discount_amount || 0),
-            has_promo: product.has_promo || false,
-            promo_name: product.promo_name || null,
-            promo_code: product.promo_code || null,
-            hpp: parseFloat(product.HargaBeli || 0)
+        $.ajax({
+            url: '<?= base_url('kasir/pos/search-product') ?>',
+            type: 'POST',
+            data: {
+                keyword: keyword,
+                kdStore: kdStore,
+                use_promo: usePromo
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    addToCart(response.product);
+                    $('#scanInput').val('').focus();
+
+                    if (response.product.promo_available && !response.product.has_promo) {
+                        showAlert('info',
+                            `Produk ${response.product.NamaLengkap} memiliki promo yang tersedia`);
+                    }
+                } else {
+                    showAlert('error', response.message);
+                    $('#scanInput').select();
+                }
+            },
+            error: function() {
+                showAlert('error', 'Gagal mencari produk');
+            }
         });
     }
 
-    renderCart();
-    calculateTotals();
+    // Add to cart
+    function addToCart(product) {
+        // cek apakah produk sudah ada di keranjang
+        const existingIndex = cart.findIndex(item => item.pcode === product.PCode);
 
-    if (product.has_promo) {
-        showAlert('success', `PROMO AKTIF: ${product.promo_name}! Hemat Rp ${formatNumber(product.discount_amount)}`);
+        // jika sudah ada, tambahkan qty
+        if (existingIndex !== -1) {
+            cart[existingIndex].qty += 1;
+        } else {
+            // jika belum ada, tambahkan item baru
+            cart.push({
+                pcode: product.PCode,
+                nama: product.NamaStruk || product.NamaLengkap,
+                price: parseFloat(product.Harga1c),
+                qty: 1,
+                discount: parseFloat(product.discount_amount || 0),
+                has_promo: product.has_promo || false,
+                promo_name: product.promo_name || null,
+                promo_code: product.promo_code || null,
+                hpp: parseFloat(product.HargaBeli || 0)
+            });
+        }
+
+        renderCart(); // Render ulang keranjang
+        calculateTotals(); // Hitung ulang total
+
+        if (product.has_promo) {
+            showAlert('success', `PROMO AKTIF: ${product.promo_name}! Hemat Rp ${formatNumber(product.discount_amount)}`);
+        }
     }
-}
 
-// Render cart
-function renderCart() {
-    const cartContainer = $('#cartItems');
-    const emptyCart = $('#emptyCart');
+    // Render cart
+    function renderCart() {
+        const cartContainer = $('#cartItems');
+        const emptyCart = $('#emptyCart');
 
-    if (cart.length === 0) {
-        emptyCart.show();
+        if (cart.length === 0) {
+            emptyCart.show();
+            cartContainer.find('.cart-item').remove();
+            $('#cartCount').text('0');
+            return;
+        }
+
+        emptyCart.hide();
         cartContainer.find('.cart-item').remove();
-        $('#cartCount').text('0');
-        return;
-    }
 
-    emptyCart.hide();
-    cartContainer.find('.cart-item').remove();
+        cart.forEach((item, index) => {
+            const subtotal = (item.price - item.discount) * item.qty;
+            const hasPromoAvailable = item.promo_available || item.has_promo;
 
-    cart.forEach((item, index) => {
-        const subtotal = (item.price - item.discount) * item.qty;
-        const hasPromoAvailable = item.promo_available || item.has_promo;
-
-        const cartItem = `
+            const cartItem = `
             <div class="cart-item bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl p-4 mb-3 border border-gray-200 hover:shadow-md transition-all duration-200 hover:scale-102">
                 <div class="flex items-start justify-between mb-3">
                     <div class="flex-1">
@@ -467,322 +470,324 @@ function renderCart() {
             </div>
         `;
 
-        cartContainer.append(cartItem);
-    });
+            cartContainer.append(cartItem);
+        });
 
-    $('#cartCount').text(cart.length);
-}
-
-// Toggle promo for specific item
-function toggleItemPromo(index) {
-    const item = cart[index];
-    const usePromo = !item.has_promo;
-    const kdStore = $('#hdnKdStore').val();
-
-    $.ajax({
-        url: '<?= base_url('kasir/pos/toggle-promo') ?>',
-        type: 'POST',
-        data: {
-            pcode: item.pcode,
-            use_promo: usePromo,
-            kdStore: kdStore
-        },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                cart[index].has_promo = response.has_promo;
-                cart[index].promo_name = response.promo_name || null;
-                cart[index].promo_code = response.promo_code || null;
-                cart[index].discount = response.discount_amount || 0;
-                cart[index].price = response.original_price;
-
-                renderCart();
-                calculateTotals();
-
-                const action = response.has_promo ? 'diterapkan' : 'dihapus';
-                showAlert('success', `Promo ${action} untuk ${item.nama}`);
-            } else {
-                showAlert('error', response.message);
-            }
-        }
-    });
-}
-
-// Toggle all promos in cart
-function toggleAllPromos() {
-    if (cart.length === 0) {
-        showAlert('error', 'Keranjang kosong');
-        return;
+        $('#cartCount').text(cart.length);
     }
 
-    const hasAnyPromo = cart.some(item => item.has_promo);
-    const usePromo = !hasAnyPromo;
-    const kdStore = $('#hdnKdStore').val();
+    // Toggle promo for specific item
+    function toggleItemPromo(index) {
+        const item = cart[index];
+        const usePromo = !item.has_promo;
+        const kdStore = $('#hdnKdStore').val();
 
-    let processed = 0;
-    const total = cart.filter(item => item.promo_available || item.has_promo).length;
+        $.ajax({
+            url: '<?= base_url('kasir/pos/toggle-promo') ?>',
+            type: 'POST',
+            data: {
+                pcode: item.pcode,
+                use_promo: usePromo,
+                kdStore: kdStore
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    cart[index].has_promo = response.has_promo;
+                    cart[index].promo_name = response.promo_name || null;
+                    cart[index].promo_code = response.promo_code || null;
+                    cart[index].discount = response.discount_amount || 0;
+                    cart[index].price = response.original_price;
 
-    if (total === 0) {
-        showAlert('info', 'Tidak ada produk dengan promo');
-        return;
-    }
-
-    cart.forEach((item, index) => {
-        if (item.promo_available || item.has_promo) {
-            $.ajax({
-                url: '<?= base_url('kasir/pos/toggle-promo') ?>',
-                type: 'POST',
-                data: {
-                    pcode: item.pcode,
-                    use_promo: usePromo,
-                    kdStore: kdStore
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.success) {
-                        cart[index].has_promo = response.has_promo;
-                        cart[index].promo_name = response.promo_name || null;
-                        cart[index].promo_code = response.promo_code || null;
-                        cart[index].discount = response.discount_amount || 0;
-                    }
-
-                    processed++;
-                    if (processed === total) {
-                        renderCart();
-                        calculateTotals();
-                        const action = usePromo ? 'diterapkan' : 'dihapus';
-                        showAlert('success', `Semua promo ${action}`);
-                    }
-                }
-            });
-        }
-    });
-}
-
-// Cart operations
-function removeFromCart(index) {
-    cart.splice(index, 1);
-    renderCart();
-    calculateTotals();
-}
-
-function increaseQty(index) {
-    cart[index].qty += 1;
-    renderCart();
-    calculateTotals();
-}
-
-function decreaseQty(index) {
-    if (cart[index].qty > 1) {
-        cart[index].qty -= 1;
-        renderCart();
-        calculateTotals();
-    }
-}
-
-function updateQty(index, value) {
-    const qty = parseInt(value);
-    if (qty > 0) {
-        cart[index].qty = qty;
-        renderCart();
-        calculateTotals();
-    }
-}
-
-function clearCart() {
-    if (cart.length === 0) return;
-
-    if (confirm('Yakin ingin mengosongkan keranjang?')) {
-        cart = [];
-        renderCart();
-        calculateTotals();
-    }
-}
-
-// Calculate totals
-function calculateTotals() {
-    let totalQty = 0;
-    let subtotal = 0;
-    let totalDiscount = 0;
-
-    cart.forEach(item => {
-        totalQty += item.qty;
-        subtotal += (item.price * item.qty);
-        totalDiscount += (item.discount * item.qty);
-    });
-
-    grandTotal = subtotal - totalDiscount;
-
-    $('#summaryQty').text(totalQty);
-    $('#summarySubtotal').text('Rp ' + formatNumber(subtotal));
-    $('#summaryDiscount').text('Rp ' + formatNumber(totalDiscount));
-    $('#summaryGrandTotal').text('Rp ' + formatNumber(grandTotal));
-
-    $('#btnProcess').prop('disabled', cart.length === 0);
-    calculateChange();
-}
-
-// Payment methods
-function selectPaymentMethod(method) {
-    currentPaymentMethod = method;
-
-    $('.bg-blue-600').removeClass('bg-blue-600 text-white shadow-md').addClass('bg-gray-100 text-gray-700');
-    $(`#btn${method.charAt(0).toUpperCase() + method.slice(1)}`).removeClass('bg-gray-100 text-gray-700').addClass(
-        'bg-blue-600 text-white shadow-md');
-}
-
-function quickAmount(amount) {
-    $('#paymentAmount').val(formatNumber(amount));
-    calculateChange();
-}
-
-function quickAmountExact() {
-    $('#paymentAmount').val(formatNumber(grandTotal));
-    calculateChange();
-}
-
-function clearPayment() {
-    $('#paymentAmount').val('');
-    $('#changeDisplay').addClass('hidden');
-}
-
-function calculateChange() {
-    const paymentInput = $('#paymentAmount').val().replace(/[^0-9]/g, '');
-    const payment = parseInt(paymentInput) || 0;
-
-    if (payment >= grandTotal && grandTotal > 0) {
-        const change = payment - grandTotal;
-        $('#changeAmount').text('Rp ' + formatNumber(change));
-        $('#changeDisplay').removeClass('hidden');
-        $('#btnProcess').prop('disabled', false);
-    } else {
-        $('#changeDisplay').addClass('hidden');
-        $('#btnProcess').prop('disabled', true);
-    }
-}
-
-// Process payment
-function processPayment() {
-    if (cart.length === 0) {
-        showAlert('error', 'Keranjang kosong');
-        return;
-    }
-
-    const paymentInput = $('#paymentAmount').val().replace(/[^0-9]/g, '');
-    const payment = parseInt(paymentInput) || 0;
-
-    if (payment < grandTotal) {
-        showAlert('error', 'Pembayaran kurang dari total belanja');
-        return;
-    }
-
-    const paymentData = {
-        // kdStore: $('#hdnKdStore').val(),
-        // noKassa: $('#hdnNoKassa').val(),
-        // kasir: $('#hdnKasir').val(),
-        items: cart,
-        payment: {
-            subtotal: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
-            total_discount: cart.reduce((sum, item) => sum + (item.discount * item.qty), 0),
-            grand_total: grandTotal,
-            total_bayar: payment,
-            kembalian: payment - grandTotal,
-            tunai: currentPaymentMethod === 'tunai' ? payment : 0,
-            kdebit: currentPaymentMethod === 'debit' ? payment : 0,
-            kkredit: currentPaymentMethod === 'kredit' ? payment : 0,
-            gopay: currentPaymentMethod === 'gopay' ? payment : 0
-        }
-    };
-
-    $('#btnProcess').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Processing...');
-
-    $.ajax({
-        url: '<?= base_url('kasir/pos/save-transaction') ?>',
-        type: 'POST',
-        data: paymentData,
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                // Tampilkan notifikasi sukses 
-                showAlert('success',
-                    `🎉 Transaksi berhasil disimpan!\nNo. Struk: ${response.no_struk}\nKembalian: Rp ${formatNumber(paymentData.payment.kembalian)}`
-                );
-
-                setTimeout(() => {
-                    // Manual reset semua
-                    cart = [];
-                    currentPaymentMethod = 'tunai';
-                    grandTotal = 0;
-
-                    // Reset UI
                     renderCart();
                     calculateTotals();
-                    clearPayment();
 
-                    // Reset payment method buttons
-                    $('.bg-blue-600').removeClass('bg-blue-600 text-white shadow-md').addClass(
-                        'bg-gray-100 text-gray-700');
-                    $('#btnTunai').removeClass('bg-gray-100 text-gray-700').addClass(
-                        'bg-blue-600 text-white shadow-md');
+                    const action = response.has_promo ? 'diterapkan' : 'dihapus';
+                    showAlert('success', `Promo ${action} untuk ${item.nama}`);
+                } else {
+                    showAlert('error', response.message);
+                }
+            }
+        });
+    }
 
-                    // Reset button dan focus
-                    $('#btnProcess').prop('disabled', true).html(
+    // Toggle all promos in cart
+    function toggleAllPromos() {
+        if (cart.length === 0) {
+            showAlert('error', 'Keranjang kosong');
+            return;
+        }
+
+        const hasAnyPromo = cart.some(item => item.has_promo);
+        const usePromo = !hasAnyPromo;
+        const kdStore = $('#hdnKdStore').val();
+
+        let processed = 0;
+        const total = cart.filter(item => item.promo_available || item.has_promo).length;
+
+        if (total === 0) {
+            showAlert('info', 'Tidak ada produk dengan promo');
+            return;
+        }
+
+        cart.forEach((item, index) => {
+            if (item.promo_available || item.has_promo) {
+                $.ajax({
+                    url: '<?= base_url('kasir/pos/toggle-promo') ?>',
+                    type: 'POST',
+                    data: {
+                        pcode: item.pcode,
+                        use_promo: usePromo,
+                        kdStore: kdStore
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.success) {
+                            cart[index].has_promo = response.has_promo;
+                            cart[index].promo_name = response.promo_name || null;
+                            cart[index].promo_code = response.promo_code || null;
+                            cart[index].discount = response.discount_amount || 0;
+                        }
+
+                        processed++;
+                        if (processed === total) {
+                            renderCart();
+                            calculateTotals();
+                            const action = usePromo ? 'diterapkan' : 'dihapus';
+                            showAlert('success', `Semua promo ${action}`);
+                        }
+                    }
+                });
+            }
+        });
+    }
+
+    // Cart operations
+    function removeFromCart(index) {
+        cart.splice(index, 1);
+        renderCart();
+        calculateTotals();
+    }
+
+    function increaseQty(index) {
+        cart[index].qty += 1;
+        renderCart();
+        calculateTotals();
+    }
+
+    function decreaseQty(index) {
+        if (cart[index].qty > 1) {
+            cart[index].qty -= 1;
+            renderCart();
+            calculateTotals();
+        }
+    }
+
+    function updateQty(index, value) {
+        const qty = parseInt(value);
+        if (qty > 0) {
+            cart[index].qty = qty;
+            renderCart();
+            calculateTotals();
+        }
+    }
+
+    function clearCart() {
+        if (cart.length === 0) return;
+
+        if (confirm('Yakin ingin mengosongkan keranjang?')) {
+            cart = [];
+            renderCart();
+            calculateTotals();
+        }
+    }
+
+    // Calculate totals
+    function calculateTotals() {
+        let totalQty = 0;
+        let subtotal = 0;
+        let totalDiscount = 0;
+
+        cart.forEach(item => {
+            totalQty += item.qty;
+            subtotal += (item.price * item.qty);
+            totalDiscount += (item.discount * item.qty);
+        });
+
+        grandTotal = subtotal - totalDiscount; // Hitung grand total
+
+        // Update summary display
+        $('#summaryQty').text(totalQty);
+        $('#summarySubtotal').text('Rp ' + formatNumber(subtotal));
+        $('#summaryDiscount').text('Rp ' + formatNumber(totalDiscount));
+        $('#summaryGrandTotal').text('Rp ' + formatNumber(grandTotal));
+
+        $('#btnProcess').prop('disabled', cart.length === 0); // Enable/disable process button based on cart
+        calculateChange(); // menghitung kembalian
+    }
+
+    // Payment methods
+    function selectPaymentMethod(method) {
+        currentPaymentMethod = method;
+
+        $('.bg-blue-600').removeClass('bg-blue-600 text-white shadow-md').addClass('bg-gray-100 text-gray-700');
+        $(`#btn${method.charAt(0).toUpperCase() + method.slice(1)}`).removeClass('bg-gray-100 text-gray-700').addClass(
+            'bg-blue-600 text-white shadow-md');
+    }
+
+    function quickAmount(amount) {
+        $('#paymentAmount').val(formatNumber(amount));
+        calculateChange();
+    }
+
+    function quickAmountExact() {
+        $('#paymentAmount').val(formatNumber(grandTotal));
+        calculateChange();
+    }
+
+    function clearPayment() {
+        $('#paymentAmount').val('');
+        $('#changeDisplay').addClass('hidden');
+    }
+
+    // kalkulasi kembalian
+    function calculateChange() {
+        const paymentInput = $('#paymentAmount').val().replace(/[^0-9]/g, '');
+        const payment = parseInt(paymentInput) || 0;
+
+        if (payment >= grandTotal && grandTotal > 0) {
+            const change = payment - grandTotal;
+            $('#changeAmount').text('Rp ' + formatNumber(change));
+            $('#changeDisplay').removeClass('hidden');
+            $('#btnProcess').prop('disabled', false);
+        } else {
+            $('#changeDisplay').addClass('hidden');
+            $('#btnProcess').prop('disabled', true);
+        }
+    }
+
+    // Process payment
+    function processPayment() {
+        if (cart.length === 0) {
+            showAlert('error', 'Keranjang kosong');
+            return;
+        }
+
+        const paymentInput = $('#paymentAmount').val().replace(/[^0-9]/g, '');
+        const payment = parseInt(paymentInput) || 0;
+
+        if (payment < grandTotal) {
+            showAlert('error', 'Pembayaran kurang dari total belanja');
+            return;
+        }
+
+        const paymentData = {
+            // kdStore: $('#hdnKdStore').val(),
+            // noKassa: $('#hdnNoKassa').val(),
+            // kasir: $('#hdnKasir').val(),
+            items: cart,
+            payment: {
+                subtotal: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
+                total_discount: cart.reduce((sum, item) => sum + (item.discount * item.qty), 0),
+                grand_total: grandTotal,
+                total_bayar: payment,
+                kembalian: payment - grandTotal,
+                tunai: currentPaymentMethod === 'tunai' ? payment : 0,
+                kdebit: currentPaymentMethod === 'debit' ? payment : 0,
+                kkredit: currentPaymentMethod === 'kredit' ? payment : 0,
+                gopay: currentPaymentMethod === 'gopay' ? payment : 0
+            }
+        };
+
+        $('#btnProcess').prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Processing...');
+
+        $.ajax({
+            url: '<?= base_url('kasir/pos/save-transaction') ?>',
+            type: 'POST',
+            data: paymentData,
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    // Tampilkan notifikasi sukses 
+                    showAlert('success',
+                        `🎉 Transaksi berhasil disimpan!\nNo. Struk: ${response.no_struk}\nKembalian: Rp ${formatNumber(paymentData.payment.kembalian)}`
+                    );
+
+                    setTimeout(() => {
+                        // Manual reset semua
+                        cart = [];
+                        currentPaymentMethod = 'tunai';
+                        grandTotal = 0;
+
+                        // Reset UI
+                        renderCart();
+                        calculateTotals();
+                        clearPayment();
+
+                        // Reset payment method buttons
+                        $('.bg-blue-600').removeClass('bg-blue-600 text-white shadow-md').addClass(
+                            'bg-gray-100 text-gray-700');
+                        $('#btnTunai').removeClass('bg-gray-100 text-gray-700').addClass(
+                            'bg-blue-600 text-white shadow-md');
+
+                        // Reset button dan focus
+                        $('#btnProcess').prop('disabled', true).html(
+                            '<i class="fas fa-check-circle mr-2"></i>PROSES PEMBAYARAN');
+                        $('#scanInput').focus();
+
+                    }, 1500);
+
+                } else {
+                    showAlert('error', response.message);
+                    $('#btnProcess').prop('disabled', false).html(
                         '<i class="fas fa-check-circle mr-2"></i>PROSES PEMBAYARAN');
-                    $('#scanInput').focus();
-
-                }, 1500);
-
-            } else {
-                showAlert('error', response.message);
+                }
+            },
+            error: function() {
+                showAlert('error', 'Gagal menyimpan transaksi');
                 $('#btnProcess').prop('disabled', false).html(
                     '<i class="fas fa-check-circle mr-2"></i>PROSES PEMBAYARAN');
             }
-        },
-        error: function() {
-            showAlert('error', 'Gagal menyimpan transaksi');
-            $('#btnProcess').prop('disabled', false).html(
-                '<i class="fas fa-check-circle mr-2"></i>PROSES PEMBAYARAN');
-        }
-    });
-}
-
-// Show product list modal
-function showProductList() {
-    $('#productListModal').removeClass('hidden');
-    loadProductList();
-}
-
-function closeProductList() {
-    $('#productListModal').addClass('hidden');
-}
-
-function loadProductList(search = '') {
-    $.ajax({
-        url: '<?= base_url('kasir/pos/get-product-list') ?> ',
-        type: 'GET',
-        data: {
-            search: search
-        },
-        dataType: 'json',
-        success: function(response) {
-            if (response.success) {
-                renderProductList(response.products);
-            }
-        }
-    });
-}
-
-function renderProductList(products) {
-    const container = $('#productListContent');
-    container.empty();
-
-    if (products.length === 0) {
-        container.html('<p class="text-center text-gray-500 py-8">Produk tidak ditemukan</p>');
-        return;
+        });
     }
 
-    products.forEach(product => {
-        const item = `
+    // Show product list modal
+    function showProductList() {
+        $('#productListModal').removeClass('hidden');
+        loadProductList();
+    }
+
+    function closeProductList() {
+        $('#productListModal').addClass('hidden');
+    }
+
+    function loadProductList(search = '') {
+        $.ajax({
+            url: '<?= base_url('kasir/pos/get-product-list') ?> ',
+            type: 'GET',
+            data: {
+                search: search
+            },
+            dataType: 'json',
+            success: function(response) {
+                if (response.success) {
+                    renderProductList(response.products);
+                }
+            }
+        });
+    }
+
+    function renderProductList(products) {
+        const container = $('#productListContent');
+        container.empty();
+
+        if (products.length === 0) {
+            container.html('<p class="text-center text-gray-500 py-8">Produk tidak ditemukan</p>');
+            return;
+        }
+
+        products.forEach(product => {
+            const item = `
             <div class="border border-gray-200 rounded-xl p-4 mb-3 hover:bg-blue-50 cursor-pointer transition-all duration-200 hover:shadow-md hover:border-blue-300"
                  onclick='selectProductFromList(${JSON.stringify(product)})'>
                 <div class="flex justify-between items-center">
@@ -796,37 +801,37 @@ function renderProductList(products) {
                 </div>
             </div>
         `;
-        container.append(item);
-    });
-}
+            container.append(item);
+        });
+    }
 
-function searchProductList() {
-    const search = $('#productSearch').val();
-    loadProductList(search);
-}
+    function searchProductList() {
+        const search = $('#productSearch').val();
+        loadProductList(search);
+    }
 
-function selectProductFromList(product) {
-    closeProductList();
-    $('#scanInput').val(product.PCode);
-    searchProduct();
-}
+    function selectProductFromList(product) {
+        closeProductList();
+        $('#scanInput').val(product.PCode);
+        searchProduct();
+    }
 
-// Utilities
-function formatNumber(num) {
-    return parseInt(num).toLocaleString('id-ID');
-}
+    // Utilities
+    function formatNumber(num) {
+        return parseInt(num).toLocaleString('id-ID');
+    }
 
-// Update fungsi showAlert:
-function showAlert(type, message) {
-    const bgColor = type === 'success' ? 'bg-green-500' :
-        type === 'info' ? 'bg-blue-500' : 'bg-red-500';
-    const icon = type === 'success' ? 'fas fa-check-circle' :
-        type === 'info' ? 'fas fa-info-circle' : 'fas fa-exclamation-circle';
+    // Update fungsi showAlert:
+    function showAlert(type, message) {
+        const bgColor = type === 'success' ? 'bg-green-500' :
+            type === 'info' ? 'bg-blue-500' : 'bg-red-500';
+        const icon = type === 'success' ? 'fas fa-check-circle' :
+            type === 'info' ? 'fas fa-info-circle' : 'fas fa-exclamation-circle';
 
-    // Handle multi-line messages
-    const formattedMessage = message.replace(/\n/g, '<br>');
+        // Handle multi-line messages
+        const formattedMessage = message.replace(/\n/g, '<br>');
 
-    const toast = `
+        const toast = `
     <div class="fixed top-4 right-4 ${bgColor} text-white px-6 py-4 rounded-xl shadow-2xl z-50 animate-slide-in-right max-w-sm">
         <div class="flex items-start">
             <i class="${icon} mr-3 text-lg mt-1 flex-shrink-0"></i>
@@ -835,56 +840,56 @@ function showAlert(type, message) {
     </div>
     `;
 
-    $('body').append(toast);
+        $('body').append(toast);
 
-    // Durasi lebih lama untuk success message
-    const duration = type === 'success' ? 5000 : 3000;
+        // Durasi lebih lama untuk success message
+        const duration = type === 'success' ? 5000 : 3000;
 
-    setTimeout(() => {
-        $('.animate-slide-in-right').fadeOut(300, function() {
-            $(this).remove();
-        });
-    }, duration);
-}
+        setTimeout(() => {
+            $('.animate-slide-in-right').fadeOut(300, function() {
+                $(this).remove();
+            });
+        }, duration);
+    }
 
-// Placeholder functions
-function showHistory() {
-    showAlert('info', 'Fitur History dalam pengembangan');
-}
+    // Placeholder functions
+    function showHistory() {
+        showAlert('info', 'Fitur History dalam pengembangan');
+    }
 
-function holdTransaction() {
-    showAlert('info', 'Fitur Hold dalam pengembangan');
-}
+    function holdTransaction() {
+        showAlert('info', 'Fitur Hold dalam pengembangan');
+    }
 
-function loadSettings() {
-    showAlert('info', 'Fitur Settings dalam pengembangan');
-}
+    function loadSettings() {
+        showAlert('info', 'Fitur Settings dalam pengembangan');
+    }
 </script>
 
 <style>
-@keyframes slide-in-right {
-    from {
-        transform: translateX(100%);
-        opacity: 0;
+    @keyframes slide-in-right {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
     }
 
-    to {
-        transform: translateX(0);
-        opacity: 1;
+    .animate-slide-in-right {
+        animation: slide-in-right 0.3s ease-out;
     }
-}
 
-.animate-slide-in-right {
-    animation: slide-in-right 0.3s ease-out;
-}
+    .hover\:scale-102:hover {
+        transform: scale(1.02);
+    }
 
-.hover\:scale-102:hover {
-    transform: scale(1.02);
-}
-
-.hover\:scale-105:hover {
-    transform: scale(1.05);
-}
+    .hover\:scale-105:hover {
+        transform: scale(1.05);
+    }
 </style>
 
 <?= $this->endSection() ?>

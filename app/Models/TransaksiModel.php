@@ -254,11 +254,24 @@ class TransaksiModel extends Model
         if (!$header) return null;
 
         // Get details
-        $builder = $db->table('transaksi_detail');
-        $details = $builder->select('transaksi_detail.*, masterbarang.NamaLengkap, masterbarang.NamaStruk')
+        $builder = $db->table('transaksi_detail');  // gunakan alias tabel
+        $details = $builder->select("
+            transaksi_detail.*,
+            transaksi_detail.Harga as HrgJual,
+            transaksi_detail.Disc1 as Disc,
+            transaksi_detail.Jenis1,
+            (transaksi_detail.Harga * transaksi_detail.Qty) as Bruto,
+            CASE 
+                WHEN transaksi_detail.Jenis1 = 'P' THEN transaksi_detail.Disc1
+                WHEN transaksi_detail.Jenis1 = 'R' THEN (transaksi_detail.Harga * transaksi_detail.Qty * transaksi_detail.Disc1 / 100)
+                ELSE 0
+            END as DiscPersen,
+            masterbarang.NamaLengkap,
+            masterbarang.NamaStruk
+        ")
             ->join('masterbarang', 'masterbarang.PCode = transaksi_detail.PCode', 'left')
-            ->where('NoKassa', $noKassa)
-            ->where('NoStruk', $noStruk)
+            ->where('transaksi_detail.NoKassa', $noKassa)
+            ->where('transaksi_detail.NoStruk', $noStruk)
             ->get()
             ->getResultArray();
 

@@ -263,20 +263,20 @@ class UserModel extends Model
     /**
      * Get user statistics
      */
-    public function getUserStats()
-    {
-        $db = \Config\Database::connect();
+    // public function getUserStats()
+    // {
+    //     $db = \Config\Database::connect();
 
-        return [
-            'total' => $this->countAll(),
-            'active' => $this->where('is_active', 1)->countAllResults(false),
-            'inactive' => $this->where('is_active', 0)->countAllResults(false),
-            'by_role' => $db->table('users')
-                ->select('roles.nama_role, COUNT(*) as total')
-                ->join('roles', 'roles.id = users.role_id')
-                ->groupBy('users.role_id')
-                ->get()
-                ->getResultArray()
-        ];
-    }
+    //     return [
+    //         'total' => $this->countAll(),
+    //         'active' => $this->where('is_active', 1)->countAllResults(false),
+    //         'inactive' => $this->where('is_active', 0)->countAllResults(false),
+    //         'by_role' => $db->table('users')
+    //             ->select('roles.nama_role, COUNT(*) as total')
+    //             ->join('roles', 'roles.id = users.role_id')
+    //             ->groupBy('users.role_id')
+    //             ->get()
+    //             ->getResultArray()
+    //     ];
+    // }
 }

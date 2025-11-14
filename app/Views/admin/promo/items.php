@@ -296,7 +296,7 @@
                 nilai
             });
 
-            if (!pcode || nilai <= 0) {
+            if (!pcode || nilai <= 0) { // tidak ada produk atau nilai diskon tidak valid
                 $('#discountPreview').addClass('hidden');
                 return;
             }
@@ -318,15 +318,16 @@
                 discountAmount = nilai;
             }
 
+            // Update preview
             const finalPrice = harga - discountAmount;
-            const savePercent = ((discountAmount / harga) * 100).toFixed(1);
+            const savePercent = ((discountAmount / harga) * 100).toFixed(1); // jumlah diskon yang dihemat
 
             $('#previewOriginal').text('Rp ' + parseInt(harga).toLocaleString('id-ID'));
             $('#previewDiscount').text('- Rp ' + parseInt(discountAmount).toLocaleString('id-ID'));
             $('#previewFinal').text('Rp ' + parseInt(finalPrice).toLocaleString('id-ID'));
             $('#previewSave').text(savePercent + '%');
 
-            $('#discountPreview').removeClass('hidden');
+            $('#discountPreview').removeClass('hidden'); // tampilkan preview
         }
 
         // Submit form

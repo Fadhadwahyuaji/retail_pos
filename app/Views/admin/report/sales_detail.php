@@ -19,6 +19,13 @@
     </div>
 </div>
 
+<?php if (session()->getFlashdata('error')): ?>
+    <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        <strong class="font-bold">Error!</strong>
+        <span class="block sm:inline"><?= esc(session()->getFlashdata('error')) ?></span>
+    </div>
+<?php endif; ?>
+
 <!-- Filter Card -->
 <div class="bg-white rounded-lg shadow-md p-6 mb-6">
     <form action="<?= base_url('admin/report/sales-detail') ?>" method="GET">
@@ -111,8 +118,11 @@
                             <tr class="hover:bg-gray-50">
                                 <td class="px-4 py-3 text-sm text-gray-900"><?= $no++ ?></td>
                                 <td class="px-4 py-3">
-                                    <span
-                                        class="text-sm font-mono font-semibold text-blue-600"><?= esc($trans['NoStruk']) ?></span>
+                                    <a href="<?= base_url('admin/report/transaction-detail/' . rawurlencode($trans['NoKassa']) . '/' . rawurlencode($trans['NoStruk'])) ?>"
+                                        class="text-sm font-mono font-semibold text-blue-600 hover:underline"
+                                        title="Lihat Detail Item">
+                                        <?= esc($trans['NoStruk']) ?>
+                                    </a>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-gray-900">
                                     <?= date('d/m/Y', strtotime($trans['Tanggal'])) ?><br>

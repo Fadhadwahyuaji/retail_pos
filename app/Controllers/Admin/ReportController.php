@@ -87,18 +87,36 @@ class ReportController extends BaseController
      */
     public function transactionDetail($noKassa, $noStruk)
     {
-        $transaction = $this->transaksiModel->getTransactionDetails($noKassa, $noStruk);
+        try {
+            log_message('info', "Accessing transaction detail: NoKassa=$noKassa, NoStruk=$noStruk");
 
-        if (!$transaction) {
-            throw new \CodeIgniter\Exceptions\PageNotFoundException('Transaksi tidak ditemukan');
+            // Decode URL jika ada encoding
+            $noKassa = urldecode($noKassa);
+            $noStruk = urldecode($noStruk);
+
+            $transaction = $this->transaksiModel->getTransactionDetails($noKassa, $noStruk);
+
+            log_message('info', "Transaction data: " . json_encode($transaction));
+
+            if (!$transaction || empty($transaction['header'])) {
+                log_message('error', "Transaction not found: NoKassa=$noKassa, NoStruk=$noStruk");
+                return redirect()->to('admin/report/sales-detail')
+                    ->with('error', 'Transaksi tidak ditemukan');
+            }
+
+            $data = [
+                'title' => 'Detail Transaksi',
+                'transaction' => $transaction
+            ];
+
+            return view('admin/report/transaction_detail', $data);
+        } catch (\Exception $e) {
+            log_message('error', 'Error in transactionDetail: ' . $e->getMessage());
+            log_message('error', 'Stack trace: ' . $e->getTraceAsString());
+
+            return redirect()->to('admin/report/sales-detail')
+                ->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
-
-        $data = [
-            'title' => 'Detail Transaksi',
-            'transaction' => $transaction
-        ];
-
-        return view('admin/report/transaction_detail', $data);
     }
 
     /**
